@@ -175,20 +175,3 @@ sub _check_for_cdorked {
 }
 
 1;
-
-
-
-
-            $self->add_bad_advice(
-                'text'          =>  ["'$lib' is not owned by a package"],
-                'suggestion'    =>  [
-                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
-                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
-                    'target',
-                    '_blank'
-                ],
-            );
-        }
-
-
-
