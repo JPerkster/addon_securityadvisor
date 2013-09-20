@@ -157,7 +157,7 @@ sub _check_for_cdorked {
     my ($self) = @_;
     my $result = `/bin/grep open_tty /usr/local/apache/bin/httpd`;
 
-    if ( $result = //) {
+    if ( $result = '') {
         $self->add_bad_advice (
             'text'          =>      ['Apache binary appears to be infected by Linux/Cdorked.A'],
             'suggestion'    =>      [
