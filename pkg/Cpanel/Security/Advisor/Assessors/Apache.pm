@@ -155,13 +155,13 @@ sub _check_for_eol_apache {
 
 sub _check_for_cdorked {
     my ($self) = @_;
-    my $result = `/bin/grep open_tty /usr/local/apache/bin/httpd`;
+    my $result = `grep open_tty /usr/local/apache/bin/httpd`;
 
-    if ( $result = '') {
+    if ( $result =~ /open_tty/) {
         $self->add_bad_advice (
-            'text'          =>      ['Apache binary appears to be infected by Linux/Cdorked.A'],
+            'text'          =>      ['Apache binary seems to be infected by Linux/Cdorked.A'],
             'suggestion'    =>      [
-                'Please read this blog post "[output,url,_1,Apache binary backdoors,_2,_3"',
+                'Please read this blog post "[output,url,_1,Apache binary backdoors,_2,_3]"',
                 'http://blog.sucuri.net/2013/04/apache-binary-backdoors-on-cpanel-based-servers.html',
                 'target',
                 '_blank'
