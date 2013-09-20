@@ -43,6 +43,7 @@ sub generate_advice {
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
     $self->_check_for_eol_apache();
+    $self->_check_for_cdorked();
     return 1;
 }
 
@@ -152,4 +153,42 @@ sub _check_for_eol_apache {
     return 1;
 }
 
+sub _check_for_cdorked {
+    my ($self) = @_;
+    my $result = `/bin/grep open_tty /usr/local/apache/bin/httpd`;
+
+    if ( $result =~ /open_tty/) {
+        $self->add_bad_advice (
+            'text'          =>      ['Apache binary appears to be infected by Linux/Cdorked.A'],
+            'suggestion'    =>      [
+                'Please read this blog post "[output,url,_1,Apache binary backdoors,_2,_3"',
+                'http://blog.sucuri.net/2013/04/apache-binary-backdoors-on-cpanel-based-servers.html',
+                'target',
+                '_blank'
+            ],
+        );
+    } 
+    else {
+        $self->add_good_advice (
+            'text'      =>      ['Apache does not appear to be infected by Linux/Cdorked.A']
+        );
+}
+
 1;
+
+
+
+
+            $self->add_bad_advice(
+                'text'          =>  ["'$lib' is not owned by a package"],
+                'suggestion'    =>  [
+                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
+                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
+                    'target',
+                    '_blank'
+                ],
+            );
+        }
+
+
+
