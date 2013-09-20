@@ -172,6 +172,7 @@ sub _check_for_cdorked {
         $self->add_good_advice (
             'text'      =>      ['Apache does not appear to be infected by Linux/Cdorked.A']
         );
+    }
 }
 
 1;
