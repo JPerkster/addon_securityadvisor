@@ -30,16 +30,11 @@ use strict;
 use Whostmgr::Services::SSH::Config ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
-sub version {
-    return '1.00';
-}
-
 sub generate_advice {
     my ($self) = @_;
     $self->_check_for_ssh_settings;
     $self->_check_for_ssh_version;
-
-    return 1;
+    $self->_check_for_libkeyutils;
 }
 
 sub _check_for_ssh_settings {
@@ -82,12 +77,11 @@ sub _check_for_ssh_settings {
         );
 
     }
-
-    return 1;
 }
 
 sub _check_for_ssh_version {
     my ($self) = @_;
+    my ( $latest_sshversion, $current_sshversion );
 
     my $installed_rpms = $self->get_installed_rpms();
     my $available_rpms = $self->get_available_rpms();
@@ -118,7 +112,29 @@ sub _check_for_ssh_version {
         );
     }
 
-    return 1;
 }
+
+sub _check_for_libkeyutils {
+    my ($self) = @_;
+    my @keyutils = `/bin/find /lib* -name "libkeyutils.so*" -type f`;
+
+    for my $lib (@keyutils) {
+        my $result = `/bin/rpm -qf $lib`;
+        if ($result =~ m/file.*is not owned by any package/) {
+            $self->add_bad_advice(
+                'text'          =>  ["'$lib' is not owned by a package"],
+                'suggestion'    =>  [
+                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
+                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
+                    'target',
+                    '_blank'
+                ],
+            );
+        }
+        else {
+           $self->add_good_advice( 'text' => [ "$lib is owned by packages\n$result"] );
+        }
+    }
+}  
 
 1;
