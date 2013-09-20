@@ -170,7 +170,7 @@ sub _check_for_cdorked {
     } 
     else {
         $self->add_good_advice (
-            'text'      =>      ['Apache binary appears to be clear of Linux/Cdorked.A']
+            'text'      =>      ["Apache binary appears to be clear of Linux/Cdorked.A:\n$result"]
         );
     }
     return 1;
