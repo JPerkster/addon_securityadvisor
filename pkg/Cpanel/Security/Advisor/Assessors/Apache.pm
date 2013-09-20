@@ -170,9 +170,10 @@ sub _check_for_cdorked {
     } 
     else {
         $self->add_good_advice (
-            'text'      =>      ['Apache does not appear to be infected by Linux/Cdorked.A']
+            'text'      =>      ['Apache binary appears to be clear of Linux/Cdorked.A']
         );
     }
+    return 1;
 }
 
 1;
