@@ -28,7 +28,13 @@ package Cpanel::Security::Advisor::Assessors::SSH;
 
 use strict;
 use Whostmgr::Services::SSH::Config ();
+use Cpanel::Logger();
+use Cpanel::SafeFind();
 use base 'Cpanel::Security::Advisor::Assessors';
+
+sub version {
+    return '1.01';
+}
 
 sub generate_advice {
     my ($self) = @_;
@@ -116,25 +122,29 @@ sub _check_for_ssh_version {
 
 sub _check_for_libkeyutils {
     my ($self) = @_;
-    my @keyutils = `/bin/find /lib* -name "libkeyutils.so*" -type f`;
-
-    for my $lib (@keyutils) {
-        my $result = `/bin/rpm -qf $lib`;
-        if ($result =~ m/file.*is not owned by any package/) {
-            $self->add_bad_advice(
-                'text'          =>  ["'$lib' is not owned by a package"],
-                'suggestion'    =>  [
-                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
-                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
-                    'target',
-                    '_blank'
-                ],
-            );
-        }
-        else {
-           $self->add_good_advice( 'text' => [ "$lib is owned by packages\n$result"] );
-        }
-    }
+    Cpanel::SafeFind::find(
+        {'wanted' => sub {
+                if ( $File::Find::name =~ /libkeyutils.so/ ) {
+            my $res = Cpanel::SafeRun::Simple::saferun( '/bin/rpm', '-qf', $File::Find::name );
+                        if ($res =~ m/file.*is not owned by any package/) {
+                            $self->add_bad_advice(
+                                'text'          =>  ["$File::Find::name is not owned by any system packages. This indicates a possibly rooted server."],
+                                'suggestion'    =>  [
+                                'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
+                                'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
+                                'target',
+                                '_blank'
+                                    ],
+                            );
+                        }
+                        else {
+                            $self->add_good_advice( 'text' => [ "$File::Find::name is owned by package $res"] );
+                        }
+                }
+            }
+        },
+        "/lib", "/lib64"
+    );
 }  
 
 1;
