@@ -30,6 +30,7 @@ use strict;
 use Whostmgr::Services::SSH::Config ();
 use Cpanel::Logger();
 use Cpanel::SafeFind();
+use Cpanel::LoadFile ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub version {
@@ -41,6 +42,7 @@ sub generate_advice {
     $self->_check_for_ssh_settings;
     $self->_check_for_ssh_version;
     $self->_check_for_libkeyutils;
+    $self->_check_for_forkbomb;
 }
 
 sub _check_for_ssh_settings {
@@ -130,11 +132,11 @@ sub _check_for_libkeyutils {
                             $self->add_bad_advice(
                                 'text'          =>  ["$File::Find::name is not owned by any system packages. This indicates a possibly rooted server."],
                                 'suggestion'    =>  [
-                                'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
-                                'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
-                                'target',
-                                '_blank'
-                                    ],
+                                    'Check the following to determine if this server is compromised "[output,url,_1,Determine your Systems Status,_2,_3]"',
+                                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/CompSystem',
+                                   'target',
+                                    '_blank'
+                                ],
                             );
                         }
                         else {
@@ -146,5 +148,25 @@ sub _check_for_libkeyutils {
         "/lib", "/lib64"
     );
 }  
+
+sub _check_for_forkbomb {
+    my ($self) = @_;
+    
+    my $profile = Cpanel::LoadFile::loadfile('/etc/profile') or die Cpanel::Logger::die("Could not open /etc/profile:  $!\n");
+    if ( $profile =~ /cPanel Added Limit Protections -- BEGIN/ ) {
+    $self->add_good_advice( 'text' => ["Fork Bomb Protection Enabled"] );
+    }
+   else {
+    $self->add_bad_advice(
+        'text'      =>  ["Fork Bomb Protection disabled!"],
+        'suggestion'    =>  [
+            'It is highly advised to enable "[output,url,_1,Fork Bomb Protection,_2,_3]"',
+            $self->base_path('scripts2/modlimits'),
+            'target',
+            '_blank'
+        ],
+       );
+   }
+}
 
 1;
