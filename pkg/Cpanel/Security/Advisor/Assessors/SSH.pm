@@ -85,6 +85,40 @@ sub _check_for_ssh_settings {
         );
 
     }
+
+    if ( $sshd_config->{'Port'} = m/22/i || !$sshd_config->{'Port'} ) {
+    $self->add_bad_advice(
+       'text'   => ['SSHD is listening on port 22'],
+       'suggestion' => [
+        'It is recommended to have SSHD listening on a port other than 22.  Please check the "[output,url,_1,documentation for securing SSH,_2,_3]"',
+        'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/WHMDocs/SecureSSHConfig',
+        'target',
+        '_blank'
+       ],
+    );
+    }
+    else {
+    $self->add_good_advice(
+       'text' => ['SSH Port is not running on the default port (22)'],
+    );
+   }
+
+   if ( $sshd_config->{'Protocol'} =~ m/1/i ) {
+        $self->add_bad_advice(
+            'text'              =>      ['SSHD is supporting protocol version 1'],
+            'suggestion'        =>      [
+                'It is recommended to have SSHD only support protocol version 2.  Please check the "[output,url,_1,documentation for securing SSH,_2,_3]"',
+                'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/WHMDocs/SecureSSHConfig',
+                'target',
+                '_blank'
+           ],
+        );
+    }
+    else {
+        $self->add_good_advice(
+           'text' => ['SSH is only allowing protocol version 2'],
+        );
+   }
 }
 
 sub _check_for_ssh_version {
