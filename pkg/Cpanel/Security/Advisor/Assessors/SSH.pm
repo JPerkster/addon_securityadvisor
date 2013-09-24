@@ -31,6 +31,7 @@ use Whostmgr::Services::SSH::Config ();
 use Cpanel::Logger();
 use Cpanel::SafeFind();
 use Cpanel::LoadFile ();
+use Data::Dumper ();
 use base 'Cpanel::Security::Advisor::Assessors';
 
 sub version {
@@ -116,10 +117,31 @@ sub _check_for_ssh_settings {
     }
     else {
         $self->add_good_advice(
-           'text' => ['SSH is only allowing protocol version 2'],
+           'text' => ['SSHD is only allowing protocol version 2'],
+        );
+   }
+
+    my $mainip = $1 if Cpanel::LoadFile::loadfile('/etc/wwwacct.conf') =~ /ADDR (.*)/;
+    my $listenip = $1 if Cpanel::LoadFile::loadfile('/etc/ssh/sshd_config') =~ /ListenAddress (.*)/;
+    if ( $listenip eq '0.0.0.0' || $mainip eq $listenip || !$listenip ) {
+            $self->add_bad_advice(
+                'text'              =>      ["SSHD is listening on either all bound IPs or the main shared IP of the server"],
+                'suggestion'        =>      [
+                    'It is strongly recommended that you do not use your main shared IP address for this value.  Please check the "[output,url,_1,documentation for securing SSH,_2,_3]"',
+                    'http://docs.cpanel.net/twiki/bin/view/AllDocumentation/WHMDocs/SecureSSHConfig',
+                    'target',
+                    '_blank'
+               ],
+            );
+    }
+    else {
+        $self->add_good_advice(
+           'text' => ["SSH is not listening on all interfaces nor the main shared IP"],
         );
    }
 }
+
+   
 
 sub _check_for_ssh_version {
     my ($self) = @_;
