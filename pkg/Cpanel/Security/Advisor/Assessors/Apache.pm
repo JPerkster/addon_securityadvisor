@@ -33,7 +33,8 @@ use Cpanel::Config::Sources    ();
 use Cpanel::HttpRequest        ();
 use Cpanel::HttpUtils::Version ();
 use Cpanel::SafeRun::Errors    ();
-
+use Cpanel::LoadFile           ();
+use Cpanel::Logger             ();
 sub version {
     return '1.03';
 }
@@ -43,6 +44,7 @@ sub generate_advice {
     $self->_check_for_apache_chroot();
     $self->_check_for_easyapache_build();
     $self->_check_for_eol_apache();
+    $self->_check_for_cdorked();
     return 1;
 }
 
@@ -147,6 +149,29 @@ sub _check_for_eol_apache {
                     '_blank'
                 ],
             }
+        );
+    }
+    return 1;
+}
+
+sub _check_for_cdorked {
+    my ($self) = @_;
+    my $result = Cpanel::LoadFile::loadfile('/usr/local/apache/bin/httpd') or die Cpanel::Logger::die("Could not open Apache binary:: $!\n");
+
+    if ( $result =~ /open_tty/) {
+        $self->add_bad_advice (
+            'text'          =>      ['Apache binary may be infected by Linux/Cdorked.A'],
+            'suggestion'    =>      [
+                'Please read this blog post "[output,url,_1,Apache binary backdoors,_2,_3]"',
+                'http://blog.sucuri.net/2013/04/apache-binary-backdoors-on-cpanel-based-servers.html',
+                'target',
+                '_blank'
+            ],
+        );
+    }
+    else {
+        $self->add_good_advice (
+            'text'      =>      ["Apache binary appears to be clear of Linux/Cdorked.A"]
         );
     }
     return 1;
